@@ -1,11 +1,11 @@
 {
-	"name": "web-socket-client",
+	"name": "websocket13",
 	"version": "1.0.0",
-	"description": "Simple WebSocket client with no native or heavy dependencies",
+	"description": "Simple WebSocket protocol 13 client with no native or heavy dependencies",
 	"author": "Alexander Corn <mckay@doctormckay.com>",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/DoctorMcKay/node-web-socket-client.git"
+		"url": "https://github.com/DoctorMcKay/node-websocket13.git"
 	},
 	"keywords": [
 		"websocket",
@@ -20,9 +20,9 @@
 	],
 	"license": "MIT",
 	"bugs": {
-		"url": "https://github.com/DoctorMcKay/node-web-socket-client/issues"
+		"url": "https://github.com/DoctorMcKay/node-websocket13/issues"
 	},
-	"homepage": "https://github.com/DoctorMcKay/node-web-socket-client",
+	"homepage": "https://github.com/DoctorMcKay/node-websocket13",
 	"dependencies": {
 		"bytebuffer": "^5.0.0"
 	},
