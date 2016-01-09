@@ -1,7 +1,7 @@
 {
 	"name": "web-socket-client",
 	"version": "1.0.0",
-	"description": "Simple WebSocket client with no heavy native dependencies",
+	"description": "Simple WebSocket client with no native or heavy dependencies",
 	"author": "Alexander Corn <mckay@doctormckay.com>",
 	"repository": {
 		"type": "git",
