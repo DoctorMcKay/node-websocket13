@@ -1,6 +1,6 @@
 var parseUrl = require('url').parse;
-var Socket = require('net').Socket;
-var TLSSocket = require('tls').TLSSocket;
+var Net = require('net');
+var TLS = require('tls');
 var Crypto = require('crypto');
 var ByteBuffer = require('bytebuffer');
 
@@ -95,6 +95,7 @@ function WebSocket(uri, options) {
 
 	// TODO: Cookies
 
+	this.outgoingStream = null;
 	this._dataBuffer = new Buffer(0); // holds raw TCP data that we haven't processed yet
 	this._frameData = null; // holds the metadata for the current frame whose payload data we're holding
 	this._frameBuffer = new Buffer(0); // holds frame payload data that we haven't dispatched to be handled yet
@@ -122,6 +123,24 @@ WebSocket.prototype.disconnect = function(code, reason) {
 	this.state = WebSocket.State.Closing;
 };
 
+WebSocket.prototype.send = function(data) {
+	var opcode = (typeof data === 'string' ? WebSocket.FrameType.Data.Text : WebSocket.FrameType.Data.Binary);
+	if (ByteBuffer.isByteBuffer(data)) {
+		data = data.toBuffer();
+	} else if (typeof data === 'string') {
+		data = new Buffer(data, 'utf8');
+	}
+
+	this._sendFrame({
+		"FIN": true,
+		"RSV1": false,
+		"RSV2": false,
+		"RSV3": false,
+		"opcode": opcode,
+		"payload": data
+	});
+};
+
 WebSocket.prototype._generateNonce = function() {
 	this.nonce = Crypto.randomBytes(16).toString('base64');
 	this.headers['sec-websocket-key'] = this.nonce;
@@ -129,14 +148,14 @@ WebSocket.prototype._generateNonce = function() {
 
 WebSocket.prototype._connect = function() {
 	this._generateNonce();
-	this._socket = (this.secure ? new TLSSocket() : new Socket());
 
 	this.state = WebSocket.State.Connecting;
 
-	this._socket.connect({
-		"port": this.port,
-		"host": this.hostname
-	}, () => {
+	var connectOptions = this.options.connection || {};
+	connectOptions.port = this.port;
+	connectOptions.host = this.hostname;
+
+	this._socket = (this.secure ? TLS : Net).connect(connectOptions, () => {
 		// Time to send the handshake
 		var out = '';
 
@@ -446,7 +465,7 @@ WebSocket.prototype._handleFrame = function(frame) {
 			var utf8 = frame.payload.toString('utf8');
 
 			// Check that the UTF-8 is valid
-			if (!Buffer.compare(new Buffer(utf8, 'utf8'), frame.payload)) {
+			if (Buffer.compare(new Buffer(utf8, 'utf8'), frame.payload) !== 0) {
 				// This is invalid. We must tear down the connection.
 				this._terminateError(WebSocket.StatusCode.InconsistentData, "Received invalid UTF-8 data in a text frame.");
 				return;
@@ -558,12 +577,12 @@ WebSocket.prototype._terminateError = function(code, message) {
 	this.emit('error', err);
 };
 
-function maskOrUnmask(data, key) {
-	key = new Buffer(4);
-	key.writeUInt32BE(key);
+function maskOrUnmask(data, maskKey) {
+	var key = new Buffer(4);
+	key.writeUInt32BE(maskKey);
 
 	for (var i = 0; i < data.length; i++) {
-		data[i] = data[i] ^ key[i % 4];
+		data[i] ^= key[i % 4];
 	}
 
 	return data;
