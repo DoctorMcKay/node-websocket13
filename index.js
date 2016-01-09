@@ -107,6 +107,10 @@ function WebSocket(uri, options) {
  * @param {string} [reason] - An optional reason string to send to the other side
  */
 WebSocket.prototype.disconnect = function(code, reason) {
+	if (this.state != WebSocket.State.Connected) {
+		throw new Error("Cannot disconnect a WebSocket that is not connected.");
+	}
+
 	code = code || WebSocket.StatusCode.NormalClosure;
 	reason = reason || "";
 
