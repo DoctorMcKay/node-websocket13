@@ -1,0 +1,32 @@
+{
+	"name": "web-socket-client",
+	"version": "1.0.0",
+	"description": "Simple WebSocket client with no heavy native dependencies",
+	"author": "Alexander Corn <mckay@doctormckay.com>",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/DoctorMcKay/node-web-socket-client.git"
+	},
+	"keywords": [
+		"websocket",
+		"websockets",
+		"web socket",
+		"web sockets",
+		"networking",
+		"network",
+		"socket",
+		"sockets",
+		"data"
+	],
+	"license": "MIT",
+	"bugs": {
+		"url": "https://github.com/DoctorMcKay/node-web-socket-client/issues"
+	},
+	"homepage": "https://github.com/DoctorMcKay/node-web-socket-client",
+	"dependencies": {
+		"bytebuffer": "^5.0.0"
+	},
+	"engines": {
+		"node": ">=4.0.0"
+	}
+}
