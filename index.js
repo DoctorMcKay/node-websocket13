@@ -101,6 +101,23 @@ function WebSocket(uri, options) {
 	this._connect();
 }
 
+/**
+ * Disconnect the websocket gracefully.
+ * @param {number} [code=WebSocket.StatusCode.NormalClosure] - A value from the WebSocket.StatusCode enum to send to the other side
+ * @param {string} [reason] - An optional reason string to send to the other side
+ */
+WebSocket.prototype.disconnect = function(code, reason) {
+	code = code || WebSocket.StatusCode.NormalClosure;
+	reason = reason || "";
+
+	var buf = new ByteBuffer(2 + reason.length, ByteBuffer.BIG_ENDIAN);
+	buf.writeUint16(code);
+	buf.writeString(reason);
+
+	this._sendControl(WebSocket.FrameType.Control.Close, buf.flip().toBuffer());
+	this.state = WebSocket.State.Closing;
+};
+
 WebSocket.prototype._generateNonce = function() {
 	this.nonce = Crypto.randomBytes(16).toString('base64');
 	this.headers['sec-websocket-key'] = this.nonce;
@@ -268,14 +285,6 @@ WebSocket.prototype._connect = function() {
 	});
 };
 
-WebSocket.prototype._closeError = function(err) {
-	err.state = this.state;
-	this.state = WebSocket.State.Closed;
-	this._socket.end();
-	this._socket.destroy();
-	this.emit('error', err);
-};
-
 WebSocket.prototype._handleData = function(data) {
 	if (data && data.length > 0) {
 		this._dataBuffer = Buffer.concat([this._dataBuffer, data]);
@@ -367,22 +376,21 @@ WebSocket.prototype._handleFrame = function(frame) {
 				var reason = "";
 
 				if (frame.payload && frame.payload.length >= 2) {
-					code = frame.payload.readUInt16(0);
+					code = frame.payload.readUInt16BE(0);
 
 					if (frame.payload.length > 2) {
 						reason = frame.payload.toString('utf8', 2);
 					}
 				}
 
-				if (this.state == WebSocket.State.Closing || this.state == WebSocket.State.ClosingError) {
-					this.state = WebSocket.State.Closed;
-					this.emit('closed', code, reason, this.state == WebSocket.State.Closing);
+				var state = this.state;
+				this.state = WebSocket.State.Closed;
+				this.emit('disconnected', code, reason, state == WebSocket.State.Closing);
+
+				if (state == WebSocket.State.Closing || state == WebSocket.State.ClosingError) {
 					this._socket.end();
 					// We're all done here
 				} else {
-					this.state = WebSocket.State.Closed;
-					this.emit('closed', code, reason, false);
-
 					var payload = new ByteBuffer(2 + reason.length, ByteBuffer.BIG_ENDIAN);
 					payload.writeUint16(code);
 					payload.writeString(reason || "");
@@ -525,6 +533,14 @@ WebSocket.prototype._sendControl = function(opcode, payload) {
 		"RSV2": false,
 		"RSV3": false
 	});
+};
+
+WebSocket.prototype._closeError = function(err) {
+	err.state = this.state;
+	this.state = WebSocket.State.Closed;
+	this._socket.end();
+	this._socket.destroy();
+	this.emit('error', err);
 };
 
 WebSocket.prototype._terminateError = function(code, message) {
