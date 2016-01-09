@@ -287,25 +287,25 @@ WebSocket.prototype._handleData = function(data) {
 		var buf = ByteBuffer.wrap(this._dataBuffer, ByteBuffer.BIG_ENDIAN);
 		var frame = {};
 
-		var byte = buf.readByte();
+		var byte = buf.readUint8();
 		frame.FIN = !!(byte & (1 << 7));
 		frame.RSV1 = !!(byte & (1 << 6));
 		frame.RSV2 = !!(byte & (1 << 5));
 		frame.RSV3 = !!(byte & (1 << 4));
 		frame.opcode = byte & 0x0F;
 
-		byte = buf.readByte();
+		byte = buf.readUint8();
 		var hasMask = !!(byte & (1 << 7));
 		frame.payloadLength = byte & 0x7F;
 
 		if (frame.payloadLength == 126) {
-			frame.payloadLength = buf.readShort();
+			frame.payloadLength = buf.readUint16();
 		} else if (frame.payloadLength == 127) {
-			frame.payloadLength = buf.readLong();
+			frame.payloadLength = buf.readUint64();
 		}
 
 		if (hasMask) {
-			frame.maskKey = buf.readInt();
+			frame.maskKey = buf.readUint32();
 		} else {
 			frame.maskKey = null;
 		}
@@ -376,14 +376,19 @@ WebSocket.prototype._handleFrame = function(frame) {
 				} else {
 					this.state = WebSocket.State.Closed;
 					this.emit('closed', code, reason, false);
-					// TODO: Send close frame back
+
+					var payload = new ByteBuffer(2 + reason.length, ByteBuffer.BIG_ENDIAN);
+					payload.writeUint16(code);
+					payload.writeString(reason || "");
+					this._sendControl(WebSocket.FrameType.Control.Close, payload.flip().toBuffer());
+
 					this._socket.end();
 				}
 
 				break;
 
 			case WebSocket.FrameType.Control.Ping:
-				// TODO: Send back pong
+				this._sendControl(WebSocket.FrameType.Control.Pong, frame.payload);
 				break;
 
 			case WebSocket.FrameType.Control.Pong:
@@ -441,8 +446,84 @@ WebSocket.prototype._handleFrame = function(frame) {
 	}
 };
 
+WebSocket.prototype._sendFrame = function(frame) {
+	if (typeof frame.FIN === 'undefined') {
+		frame.FIN = true;
+	}
+
+	frame.maskKey = Crypto.randomBytes(32).readUInt32BE(0);
+	frame.payload = frame.payload || new Buffer(0);
+
+	var size = 0;
+	size += 1; // FIN, RSV1, RSV2, RSV3, opcode
+	size += 1; // MASK, payload length
+
+	if (frame.payload.length >= 126 && frame.payload.length <= 65535) {
+		size += 2; // 16-bit payload length
+	} else if (frame.payload.length > 65535) {
+		size += 8; // 64-bit payload length
+	}
+
+	if (frame.maskKey) {
+		size += 4;
+	}
+
+	size += frame.payload.length;
+
+	var buf = new ByteBuffer(size, ByteBuffer.BIG_ENDIAN);
+	var byte = 0;
+
+	byte |= (frame.FIN ? 1 : 0) << 7;
+	byte |= (frame.RSV1 ? 1 : 0) << 6;
+	byte |= (frame.RSV2 ? 1 : 0) << 5;
+	byte |= (frame.RSV3 ? 1 : 0) << 4;
+	byte |= frame.opcode & 0x0F;
+	buf.writeUint8(byte);
+
+	byte = 0;
+	byte |= (frame.maskKey ? 1 : 0) << 7;
+
+	if (frame.payload.length <= 125) {
+		byte |= frame.payload.length;
+		buf.writeUint8(byte);
+	} else if (frame.payload.length <= 65535) {
+		byte |= 126;
+		buf.writeUint8(byte);
+		buf.writeUint16(frame.payload.length);
+	} else {
+		byte |= 127;
+		buf.writeUint8(byte);
+		buf.writeUint64(frame.payload.length);
+	}
+
+	if (frame.maskKey) {
+		buf.writeUint32(frame.maskKey);
+		buf.append(maskOrUnmask(frame.payload, frame.maskKey));
+	} else {
+		buf.append(frame.payload);
+	}
+
+	this._socket.write(buf.flip().toBuffer());
+};
+
+WebSocket.prototype._sendControl = function(opcode, payload) {
+	this._sendFrame({
+		"opcode": opcode,
+		"payload": payload,
+		"payloadLength": payload.length,
+		"FIN": true,
+		"RSV1": false,
+		"RSV2": false,
+		"RSV3": false
+	});
+};
+
 WebSocket.prototype._terminateError = function(code, message) {
-	// TODO: Terminate via WebSocket
+	var payload = new ByteBuffer(2 + message.length, ByteBuffer.BIG_ENDIAN);
+	payload.writeUint16(code);
+	payload.writeString(message || "");
+	this._sendControl(WebSocket.FrameType.Control.Close, payload.flip().toBuffer());
+
 	var err = new Error(message);
 	err.code = code;
 	this.emit('error', err);
