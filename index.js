@@ -277,11 +277,9 @@ WebSocket.prototype._closeError = function(err) {
 };
 
 WebSocket.prototype._handleData = function(data) {
-	if (data.length == 0) {
-		return;
+	if (data && data.length > 0) {
+		this._dataBuffer = Buffer.concat([this._dataBuffer, data]);
 	}
-
-	this._dataBuffer = this._dataBuffer.concat(data);
 
 	try {
 		var buf = ByteBuffer.wrap(this._dataBuffer, ByteBuffer.BIG_ENDIAN);
@@ -314,19 +312,27 @@ WebSocket.prototype._handleData = function(data) {
 			return; // We don't have the entire payload yet
 		}
 
-		frame.payload = buf.slice(buf.offset, buf.offset + frame.payloadLength);
-
+		frame.payload = buf.slice(buf.offset, buf.offset + frame.payloadLength).toBuffer();
 		buf.skip(frame.payloadLength);
-		this._dataBuffer = buf.toBuffer();
-
-		this._handleFrame(frame);
+	} catch (ex) {
+		// We don't have the full data yet. No worries.
+		return;
 	}
+
+	// We have a full frame
+	this._dataBuffer = buf.toBuffer();
+	this._handleFrame(frame);
+
+	this._handleData();
 };
 
 WebSocket.prototype._handleFrame = function(frame) {
 	// Flags: FIN, RSV1, RSV2, RSV3
-	// Ints: opcode (4 bits), payloadLength (up to 64 bits), mask (32 bits)
+	// Ints: opcode (4 bits), payloadLength (up to 64 bits), maskKey (32 bits)
 	// Binary: payload
+
+	this.emit('debug', "Got frame " + frame.opcode.toString(16).toUpperCase() + ", " + (frame.FIN ? "FIN, " : "") +
+		(frame.maskKey ? "MASK, " : "") + "payload " + frame.payload.length + " bytes");
 
 	if (
 		this.state != WebSocket.State.Connected &&
@@ -347,7 +353,7 @@ WebSocket.prototype._handleFrame = function(frame) {
 		}
 
 		if (frame.payload.length > 125) {
-			this._terminateError(new Error("Got a control frame " + frame.opcode.toString(16) + " with invalid payload lenght " + frame.payload.length));
+			this._terminateError(new Error("Got a control frame " + frame.opcode.toString(16) + " with invalid payload length " + frame.payload.length));
 			return;
 		}
 
@@ -453,6 +459,9 @@ WebSocket.prototype._sendFrame = function(frame) {
 
 	frame.maskKey = Crypto.randomBytes(32).readUInt32BE(0);
 	frame.payload = frame.payload || new Buffer(0);
+
+	this.emit('debug', "Sending frame " + frame.opcode.toString(16).toUpperCase() + ", " + (frame.FIN ? "FIN, " : "") +
+		(frame.maskKey ? "MASK, " : "") + "payload " + frame.payload.length + " bytes");
 
 	var size = 0;
 	size += 1; // FIN, RSV1, RSV2, RSV3, opcode
