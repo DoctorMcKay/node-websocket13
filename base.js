@@ -1,7 +1,7 @@
 var WS13 = require('./index.js');
+var StreamedFrame = require('./streamedframe.js');
 
 var ByteBuffer = require('bytebuffer');
-var Crypto = require('crypto');
 
 require('util').inherits(WebSocketBase, require('events').EventEmitter);
 module.exports = WebSocketBase;
@@ -10,11 +10,10 @@ function WebSocketBase() {
 	this.state = WS13.State.Closed;
 	this.extensions = [];
 	this.protocol = null;
-	this.outgoingStream = null;
 
+	this._outgoingFrames = []; // holds frame objects which we haven't sent yet
 	this._dataBuffer = new Buffer(0); // holds raw TCP data that we haven't processed yet
-	this._frameData = null; // holds the metadata for the current frame whose payload data we're holding
-	this._frameBuffer = new Buffer(0); // holds frame payload data that we haven't dispatched to be handled yet
+	this._frameData = null; // holds the current frame for which we're still receiving payload data
 }
 
 /**
@@ -60,9 +59,20 @@ WebSocketBase.prototype.send = function(data) {
 	});
 };
 
+WebSocketBase.prototype.createMessageStream = function(type) {
+	var frame = new StreamedFrame(this, type);
+	this._outgoingFrames.push(frame);
+	return frame;
+};
+
 WebSocketBase.prototype._handleData = function(data) {
 	if (data && data.length > 0) {
 		this._dataBuffer = Buffer.concat([this._dataBuffer, data]);
+	}
+
+	if (this._dataBuffer.length == 0) {
+		this.emit('debug', "No data in our TCP buffer.");
+		return;
 	}
 
 	try {
@@ -129,6 +139,8 @@ WebSocketBase.prototype._handleFrame = function(frame) {
 		return;
 	}
 
+	var payload;
+
 	// Is this a control frame?
 	if (frame.opcode & (1 << 3)) {
 		if (!frame.FIN) {
@@ -166,7 +178,7 @@ WebSocketBase.prototype._handleFrame = function(frame) {
 					this._socket.end();
 					// We're all done here
 				} else {
-					var payload = new ByteBuffer(2 + reason.length, ByteBuffer.BIG_ENDIAN);
+					payload = new ByteBuffer(2 + reason.length, ByteBuffer.BIG_ENDIAN);
 					payload.writeUint16(code);
 					payload.writeString(reason || "");
 					this._sendControl(WS13.FrameType.Control.Close, payload.flip().toBuffer());
@@ -193,14 +205,18 @@ WebSocketBase.prototype._handleFrame = function(frame) {
 
 	if (frame.opcode == WS13.FrameType.Continuation) {
 		this.emit('debug', "Got continuation frame");
+		var fin = frame.FIN;
+		payload = frame.payload;
+
 		frame = this._frameData;
-		frame.payload = this._frameBuffer.concat(frame.payload);
+
+		frame.FIN = fin;
+		frame.payload = Buffer.concat([frame.payload, payload]);
 	}
 
 	if (!frame.FIN) {
 		// There is more to come
 		this.emit('debug', "Got non-FIN frame");
-		this._frameBuffer = frame.payload;
 		this._frameData = frame;
 		return;
 	}
@@ -235,14 +251,21 @@ WebSocketBase.prototype._handleFrame = function(frame) {
 	}
 };
 
-WebSocketBase.prototype._sendFrame = function(frame) {
+WebSocketBase.prototype._sendFrame = function(frame, bypassQueue) {
 	if (typeof frame.FIN === 'undefined') {
 		frame.FIN = true;
 	}
 
-	frame.payload = frame.payload || new Buffer(0);
+	if (frame.opcode & (1 << 3)) {
+		bypassQueue = true; // we can send control messages whenever
+	}
 
-	this.emit('debug', "Sending frame " + frame.opcode.toString(16).toUpperCase() + ", " + (frame.FIN ? "FIN, " : "") +
+	frame.payload = frame.payload || new Buffer(0);
+	if (frame.payload.length == 0) {
+		frame.maskKey = null;
+	}
+
+	this.emit('debug', (bypassQueue ? "Sending" : "Queueing") + " frame " + frame.opcode.toString(16).toUpperCase() + ", " + (frame.FIN ? "FIN, " : "") +
 		(frame.maskKey ? "MASK, " : "") + "payload " + frame.payload.length + " bytes");
 
 	var size = 0;
@@ -294,7 +317,39 @@ WebSocketBase.prototype._sendFrame = function(frame) {
 		buf.append(frame.payload);
 	}
 
-	this._socket.write(buf.flip().toBuffer());
+	if (bypassQueue) {
+		this._socket.write(buf.flip().toBuffer());
+	} else {
+		this._outgoingFrames.push(buf.flip().toBuffer());
+	}
+
+	this._processQueue();
+};
+
+WebSocketBase.prototype._processQueue = function() {
+	var frame;
+	var frames = this._outgoingFrames.slice(0);
+
+	while (frames.length > 0) {
+		frame = frames.splice(0, 1)[0];
+
+		if (frame instanceof StreamedFrame) {
+			if (!frame.started) {
+				this.emit('debug', "Starting StreamedFrame");
+				frame._start();
+			}
+
+			if (frame.finished) {
+				continue;
+			}
+
+			return;
+		}
+
+		this._socket.write(frame);
+	}
+
+	this._outgoingFrames = frames;
 };
 
 WebSocketBase.prototype._sendControl = function(opcode, payload) {
