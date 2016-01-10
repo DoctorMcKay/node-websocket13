@@ -124,8 +124,7 @@ WebSocket.prototype._connect = function() {
 					var lines = handshakeBuffer.split("\r\n");
 					var match = lines[0].match(/^HTTP\/(\d+\.\d+) (\d+) (.+)$/);
 					if (!match) {
-						this.state = WS13.State.Closed;
-						this.emit('error', new Error("Malformed handshake response"));
+						this._closeError(new Error("Malformed handshake response"));
 						return;
 					}
 
@@ -239,6 +238,7 @@ WebSocket.prototype._connect = function() {
 	});
 
 	this._socket.on('error', (err) => {
+		err.state = this.state;
 		this.state = WS13.State.ClosingError;
 		this.emit('error', err);
 	});
