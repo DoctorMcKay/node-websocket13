@@ -41,6 +41,12 @@ WebSocketBase.prototype.disconnect = function(code, reason) {
 
 	this._sendControl(WS13.FrameType.Control.Close, buf.flip().toBuffer());
 	this.state = WS13.State.Closing;
+
+	setTimeout(() => {
+		if (this.state != WS13.State.Closed) {
+			this._socket.end();
+		}
+	}, 5000);
 };
 
 /**
