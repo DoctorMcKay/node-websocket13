@@ -313,6 +313,10 @@ WebSocketBase.prototype._handleFrame = function(frame) {
 };
 
 WebSocketBase.prototype._sendFrame = function(frame, bypassQueue) {
+	if (this.state != WS13.State.Connected) {
+		throw new Error("Cannot send data while not connected.");
+	}
+
 	if (typeof frame.FIN === 'undefined') {
 		frame.FIN = true;
 	}
@@ -440,6 +444,7 @@ WebSocketBase.prototype._terminateError = function(code, message) {
 	this._sendControl(WS13.FrameType.Control.Close, payload.flip().toBuffer());
 
 	var err = new Error(message);
+	err.state = this.state;
 	err.code = code;
 	this.emit('error', err);
 };
