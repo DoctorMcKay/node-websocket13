@@ -226,3 +226,8 @@ WebSocket.prototype._connect = function() {
 		this.emit('error', err);
 	});
 };
+
+WebSocket.prototype._sendFrame = function(frame) {
+	frame.maskKey = Crypto.randomBytes(32).readUInt32BE(0);
+	WebSocketBase.prototype._sendFrame.apply(this, arguments);
+};

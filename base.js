@@ -240,7 +240,6 @@ WebSocketBase.prototype._sendFrame = function(frame) {
 		frame.FIN = true;
 	}
 
-	frame.maskKey = Crypto.randomBytes(32).readUInt32BE(0);
 	frame.payload = frame.payload || new Buffer(0);
 
 	this.emit('debug', "Sending frame " + frame.opcode.toString(16).toUpperCase() + ", " + (frame.FIN ? "FIN, " : "") +
