@@ -1,7 +1,8 @@
 # WebSockets for Node.js
 
-This is a pure-JavaScript implementation of WebSockets. It has only one lightweight dependency. Presently it can only
-establish connections to WebSocket servers (a client), but server support is planned.
+This is a pure-JavaScript implementation of [WebSockets version 13](https://tools.ietf.org/html/rfc6455).
+It has only one lightweight dependency. Presently it can only establish connections to WebSocket servers (as a client),
+but server support is [planned](#planned-features).
 
 # Installation and Example
 
