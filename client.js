@@ -15,9 +15,9 @@ WS13.WebSocket = WebSocket;
 function WebSocket(uri, options) {
 	WebSocketBase.call(this);
 
-	this.uri = parseUrl(uri);
+	uri = parseUrl(uri);
 
-	switch (this.uri.protocol.toLowerCase()) {
+	switch (uri.protocol.toLowerCase()) {
 		case 'ws:':
 			this.secure = false;
 			break;
@@ -27,7 +27,7 @@ function WebSocket(uri, options) {
 			break;
 
 		default:
-			throw new Error("Unknown protocol scheme " + this.uri.protocol);
+			throw new Error("Unknown protocol scheme " + uri.protocol);
 	}
 
 	this.options = {
@@ -43,9 +43,9 @@ function WebSocket(uri, options) {
 		}
 	}
 
-	this.hostname = this.uri.hostname;
-	this.port = parseInt(this.uri.port || (this.secure ? 443 : 80), 10);
-	this.path = this.uri.path || '/';
+	this.hostname = uri.hostname;
+	this.port = parseInt(uri.port || (this.secure ? 443 : 80), 10);
+	this.path = uri.path || '/';
 
 	this.headers = this.options.headers || {};
 	// Lowercase all the header names so we don't conflict
@@ -56,7 +56,7 @@ function WebSocket(uri, options) {
 		}
 	}
 
-	this.headers.host = this.uri.host;
+	this.headers.host = uri.host;
 	this.headers.upgrade = 'websocket';
 	this.headers.connection = 'Upgrade';
 	this.headers['sec-websocket-version'] = WEBSOCKET_VERSION;
