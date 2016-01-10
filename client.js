@@ -6,7 +6,7 @@ var Net = require('net');
 var TLS = require('tls');
 var Crypto = require('crypto');
 
-const HTTP_VERSION = '1.1';
+const HTTP_VERSION = 1.1;
 const WEBSOCKET_VERSION = 13;
 
 require('util').inherits(WebSocket, WebSocketBase);
@@ -30,7 +30,18 @@ function WebSocket(uri, options) {
 			throw new Error("Unknown protocol scheme " + this.uri.protocol);
 	}
 
-	this.options = options || {};
+	this.options = {
+		"pingInterval": 10000,
+		"pingTimeout": 10000,
+		"pingFailures": 3
+	};
+
+	options = options || {};
+	for (var option in options) {
+		if (options.hasOwnProperty(option)) {
+			this.options[option] = options[option];
+		}
+	}
 
 	this.hostname = this.uri.hostname;
 	this.port = parseInt(this.uri.port || (this.secure ? 443 : 80), 10);

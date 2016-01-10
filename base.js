@@ -1,6 +1,7 @@
 var WS13 = require('./index.js');
 var StreamedFrame = require('./streamedframe.js');
 
+var Crypto = require('crypto');
 var ByteBuffer = require('bytebuffer');
 
 require('util').inherits(WebSocketBase, require('events').EventEmitter);
@@ -14,6 +15,11 @@ function WebSocketBase() {
 	this._outgoingFrames = []; // holds frame objects which we haven't sent yet
 	this._dataBuffer = new Buffer(0); // holds raw TCP data that we haven't processed yet
 	this._frameData = null; // holds the current frame for which we're still receiving payload data
+
+	this.on('connected', () => {
+		this._pingFailures = 0;
+		this._queuePing();
+	});
 }
 
 /**
@@ -65,13 +71,57 @@ WebSocketBase.prototype.createMessageStream = function(type) {
 	return frame;
 };
 
+WebSocketBase.prototype._queuePing = function() {
+	clearTimeout(this._pingTimer);
+	clearTimeout(this._pingTimeout);
+
+	if (this.state != WS13.State.Connected) {
+		return;
+	}
+
+	if (!this.options.pingInterval || !this.options.pingTimeout || !this.options.pingFailures) {
+		return;
+	}
+
+	this._pingTimer = setTimeout(() => {
+		if (this.state != WS13.State.Connected) {
+			return;
+		}
+
+		var bytes = Crypto.randomBytes(4);
+		this._pingValue = bytes.readUInt32BE(0);
+
+		this._sendFrame({
+			"FIN": true,
+			"RSV1": false,
+			"RSV2": false,
+			"RSV3": false,
+			"opcode": WS13.FrameType.Control.Ping,
+			"payload": bytes
+		}, true);
+
+		this._pingTimeout = setTimeout(() => {
+			if (this.state != WS13.State.Connected) {
+				return;
+			}
+
+			this.emit('debug', "Ping timeout #" + (this._pingFailures + 1));
+
+			if (++this._pingFailures >= this.options.pingFailures) {
+				this._closeError(new Error("Ping timeout"));
+			} else {
+				this._queuePing();
+			}
+		}, this.options.pingTimeout);
+	}, this.options.pingInterval);
+};
+
 WebSocketBase.prototype._handleData = function(data) {
 	if (data && data.length > 0) {
 		this._dataBuffer = Buffer.concat([this._dataBuffer, data]);
 	}
 
 	if (this._dataBuffer.length == 0) {
-		this.emit('debug', "No data in our TCP buffer.");
 		return;
 	}
 
@@ -193,7 +243,11 @@ WebSocketBase.prototype._handleFrame = function(frame) {
 				break;
 
 			case WS13.FrameType.Control.Pong:
-				// TODO: Cancel any ping timeouts
+				if (frame.payload && frame.payload.length == 4 && frame.payload.readUInt32BE(0) == this._pingValue) {
+					this._pingFailures = 0;
+					this._queuePing();
+				}
+
 				break;
 
 			default:
