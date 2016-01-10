@@ -216,6 +216,7 @@ WebSocketBase.prototype._handleFrame = function(frame) {
 
 	if (!frame.FIN) {
 		// There is more to come
+		// TODO: Expose a Stream interface for these
 		this.emit('debug', "Got non-FIN frame");
 		this._frameData = frame;
 		return;
