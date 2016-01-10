@@ -85,7 +85,16 @@ WebSocket.prototype._connect = function() {
 	connectOptions.port = this.port;
 	connectOptions.host = this.hostname;
 
-	this._socket = (this.secure ? TLS : Net).connect(connectOptions, () => {
+	this._socket = Net.connect(connectOptions);
+	var event = 'connect';
+
+	if (this.secure) {
+		connectOptions.socket = this._socket;
+		this._socket = TLS.connect(connectOptions);
+		event = 'secureConnect';
+	}
+
+	this._socket.on(event, () => {
 		// Time to send the handshake
 		this._socket.write("GET " + this.path + " HTTP/" + HTTP_VERSION + "\r\n");
 
