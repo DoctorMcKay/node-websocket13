@@ -87,19 +87,16 @@ WebSocket.prototype._connect = function() {
 
 	this._socket = (this.secure ? TLS : Net).connect(connectOptions, () => {
 		// Time to send the handshake
-		var out = '';
-
-		out += "GET " + this.path + " HTTP/" + HTTP_VERSION + "\r\n";
+		this._socket.write("GET " + this.path + " HTTP/" + HTTP_VERSION + "\r\n");
 
 		// Send headers
 		for (var name in this.headers) {
 			if (this.headers.hasOwnProperty(name)) {
-				out += name + ": " + this.headers[name] + "\r\n";
+				this._socket.write(name + ": " + this.headers[name] + "\r\n");
 			}
 		}
 
-		out += "\r\n";
-		this._socket.write(out);
+		this._socket.write("\r\n");
 	});
 
 	var handshakeBuffer = '';
