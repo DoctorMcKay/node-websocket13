@@ -72,8 +72,8 @@ function WebSocket(uri, options) {
 }
 
 WebSocket.prototype._generateNonce = function() {
-	this.nonce = Crypto.randomBytes(16).toString('base64');
-	this.headers['sec-websocket-key'] = this.nonce;
+	this._nonce = Crypto.randomBytes(16).toString('base64');
+	this.headers['sec-websocket-key'] = this._nonce;
 };
 
 WebSocket.prototype._connect = function() {
@@ -170,7 +170,7 @@ WebSocket.prototype._connect = function() {
 						return;
 					}
 
-					var hash = Crypto.createHash('sha1').update(this.nonce + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11").digest('base64');
+					var hash = Crypto.createHash('sha1').update(this._nonce + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11").digest('base64');
 					if (headers['sec-websocket-accept'] != hash) {
 						err.message = "Mismatching Sec-WebSocket-Accept header";
 						err.expected = hash;
