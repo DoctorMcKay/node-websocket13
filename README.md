@@ -29,7 +29,7 @@ var socket = new WebSocket('wss://echo.websocket.org', {
     },
     "protocols": ["some_subprotocol", "some_other_subprotocol"],
     "connection": {
-        "servername": "echo.websocket.org", // for SNI
+        "auth": "aladdin:opensesame",       // HTTP Basic authorization
         "rejectUnauthorized": false         // to not reject self-signed or otherwise invalid certificates
     }
 });
@@ -174,6 +174,7 @@ reserved for internal use and will be ignored:
 - Connection
 - Sec-WebSocket-Version
 - Sec-WebSocket-Protocol
+- Sec-WebSocket-Extensions
 - Sec-WebSocket-Key
 
 ### protocols
@@ -184,9 +185,21 @@ property in the [`connected`](#connected) event.
 
 ### connection
 
-An object which will be passed to [`net.connect`](https://nodejs.org/api/net.html#net_net_connect_options_connectlistener)
-(and [`tls.connect`](https://nodejs.org/api/tls.html#tls_tls_connect_options_callback) if secure) as `options`. Here you
-can bind to a specific local interface, configure TLS options, and more.
+An object containing select properties from `http.request` (or `https.request`):
+
+- `localAddress` - The local IP address to connect from
+- `auth` - `username:password` string to use for HTTP Basic authorization
+
+**The following only apply to secure connections:**
+
+- `pfx` - Certificate, Private key and CA certificates to use for SSL. Default `null`.
+- `key` - Private key to use for SSL. Default `null`.
+- `passphrase` - A string of passphrase for the private key or pfx. Default `null`.
+- `cert` - Public x509 certificate to use. Default `null`.
+- `ca` - A string, `Buffer` or array of strings or `Buffer`s of trusted certificates in PEM format. If this is omitted several well known "root" CAs will be used, like VeriSign. These are used to authorize connections.
+- `ciphers` - A string describing the ciphers to use or exclude. Consult [OpenSSL's docs](https://www.openssl.org/docs/apps/ciphers.html#CIPHER_LIST_FORMAT) for details on the format.
+- `rejectUnauthorized` - If `true`, the server certificate is verified against the list of supplied CAs. An `error` event is emitted if verification fails. Verification happens at the connection level, before the handshake request is sent. Default `true`.
+- `secureProtocol` - The SSL method to use, e.g. SSLv3_method to force SSL version 3. The possible values depend on your installation of OpenSSL and are defined in the constant [`SSL_METHODS`](https://www.openssl.org/docs/ssl/ssl.html#DEALING_WITH_PROTOCOL_METHODS).
 
 # Properties
 
