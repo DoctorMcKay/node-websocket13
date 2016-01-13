@@ -308,6 +308,14 @@ certain conditions, `err` may contain zero or more of these properties:
 Emitted when we receive a complete message from the server. If `type` is `Text`, then `data` is a UTF-8 string.
 If `type` is `Binary`, then `data` is a `Buffer`.
 
+### streamedMessage
+- `type` - A value from the `WS13.FrameType.Data` enum descrbing what type of data we're receiving
+- `stream` - A [`StreamedIncomingFrame`](#streamedincomingframe) object
+
+Emitted when we receive the first part of a fragmented frame. See the [`StreamedIncomingFrame`](#streamedincomingframe)
+section for more information about this. If this event isn't handled, then fragmented incoming frames will be buffered
+internally, and [`message`](#message) will be emitted when the entire message is received, as normal.
+
 # StreamedOutgoingFrame
 
 Messages are sent over WebSockets in *frames*. Usually, a frame contains one complete message. However, the WebSocket
@@ -330,8 +338,22 @@ You *can* call `send()` or create new `StreamedOutgoingFrame`s while you have on
 be sent to the server until the currently-active `StreamedOutgoingFrame` is ended. Be sure to call `end()` when you're done
 writing data to it.
 
+# StreamedIncomingFrame
+
+Similar to [`StreamedOutgoingFrame`](#streamedoutgoingframe), this object is a
+[`Readable`](https://nodejs.org/api/stream.html#stream_class_stream_readable) stream. Usage of `StreamedIncomingFrame`
+allows you to receive chunks of data in real-time, instead of waiting for all chunks to be received.
+
+The data type for this message is made available through the [`streamedMessage`](#streamedmessage) event, or also
+through the `StreamedIncomingFrame#frameHeader.opcode` property. For example, if you have a `StreamedIncomingFrame`
+object `frame`, you can obtain its data type using `frame.frameHeader.opcode`.
+
+The `data` event is emitted when a chunk of data is received. If the data type is `Text`, the single argument is a UTF-8
+encoded string. If it's `Binary`, then the single argument is a `Buffer`.
+
+The `end` event is emitted when all data is received. Once `end` is emitted, no more `data` events will be emitted.
+
 # Planned Features
 
-- `StreamedIncomingFrame` support for incoming multi-frame messages. Currently they're just buffered internally and `message` is emitted when all frames are received.
 - Server support
 - [Per-message compression](https://tools.ietf.org/html/draft-ietf-hybi-permessage-compression-28)
