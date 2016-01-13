@@ -334,5 +334,4 @@ writing data to it.
 
 - `StreamedFrame` support for incoming multi-frame messages. Currently they're just buffered internally and `message` is emitted when all frames are received.
 - Server support
-- Support for cookies in handshake
 - [Per-message compression](https://tools.ietf.org/html/draft-ietf-hybi-permessage-compression-28)
