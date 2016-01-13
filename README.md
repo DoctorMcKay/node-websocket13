@@ -256,12 +256,12 @@ unlike plain TCP, the data will be received in one whole message. Therefore, one
 received message on the other side.
 
 The message will be queued and sent after every message before it is sent. If you have an ongoing
-[`StreamedFrame`](#streamedframe), it will be delayed until after the entire stream is sent.
+[`StreamedOutgoingFrame`](#streamedoutgoingframe), it will be delayed until after the entire stream is sent.
 
 ### createMessageStream(type)
 - `type` - A value from the `WS13.FrameType.Data` enum representing what kind of data is to be sent
 
-Creates and returns a new [`StreamedFrame`](#streamedframe) object. See the [`StreamedFrame` documentation](#streamedframe)
+Creates and returns a new [`StreamedOutgoingFrame`](#streamedoutgoingframe) object. See the [`StreamedOutgoingFrame` documentation](#streamedoutgoingframe)
 for more information.
 
 # Events
@@ -308,30 +308,30 @@ certain conditions, `err` may contain zero or more of these properties:
 Emitted when we receive a complete message from the server. If `type` is `Text`, then `data` is a UTF-8 string.
 If `type` is `Binary`, then `data` is a `Buffer`.
 
-# StreamedFrame
+# StreamedOutgoingFrame
 
 Messages are sent over WebSockets in *frames*. Usually, a frame contains one complete message. However, the WebSocket
 protocol also allows messages to be split up across multiple frames. This is useful when the entire data isn't available
 at the time of sending, and you'd like to stream it to the other side. In this case, call
-[`createMessageStream`](#createmessagestreamtype), which returns a `StreamedFrame` object.
+[`createMessageStream`](#createmessagestreamtype), which returns a `StreamedOutgoingFrame` object.
 
-`StreamedFrame` implements the [`Writable`](https://nodejs.org/api/stream.html#stream_class_stream_writable) interface.
+`StreamedOutgoingFrame` implements the [`Writable`](https://nodejs.org/api/stream.html#stream_class_stream_writable) interface.
 To send a chunk of data to the server, just call `frame.write(chunk)`. When you're done, call `frame.end()`.
 
 Because this implements the `Writable` interface, you can `pipe()` a `ReadableStream` into it. One use-case would be to
 pipe a download or a file on the disk into a WebSocket.
 
 One frame can contain only one type of data. This data type is set in the `createMessageStream` method, and is fixed
-for the lifetime of the `StreamedFrame`. Therefore, if your data type is `Text`, you must only call `write()` with
+for the lifetime of the `StreamedOutgoingFrame`. Therefore, if your data type is `Text`, you must only call `write()` with
 UTF-8 strings. If it's `Binary`, you must only call `write()` with `Buffer` objects. If you call `write()` with the
-wrong data type, the `StreamedFrame` will emit an `error`.
+wrong data type, the `StreamedOutgoingFrame` will emit an `error`.
 
-You *can* call `send()` or create new `StreamedFrame`s while you have one ongoing, but they will be queued and cannot
-be sent to the server until the currently-active `StreamedFrame` is ended. Be sure to call `end()` when you're done
+You *can* call `send()` or create new `StreamedOutgoingFrame`s while you have one ongoing, but they will be queued and cannot
+be sent to the server until the currently-active `StreamedOutgoingFrame` is ended. Be sure to call `end()` when you're done
 writing data to it.
 
 # Planned Features
 
-- `StreamedFrame` support for incoming multi-frame messages. Currently they're just buffered internally and `message` is emitted when all frames are received.
+- `StreamedIncomingFrame` support for incoming multi-frame messages. Currently they're just buffered internally and `message` is emitted when all frames are received.
 - Server support
 - [Per-message compression](https://tools.ietf.org/html/draft-ietf-hybi-permessage-compression-28)
