@@ -355,5 +355,4 @@ The `end` event is emitted when all data is received. Once `end` is emitted, no 
 
 # Planned Features
 
-- Server support
 - [Per-message compression](https://tools.ietf.org/html/draft-ietf-hybi-permessage-compression-28)
