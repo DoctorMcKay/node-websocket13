@@ -256,12 +256,12 @@ unlike plain TCP, the data will be received in one whole message. Therefore, one
 received message on the other side.
 
 The message will be queued and sent after every message before it is sent. If you have an ongoing
-[`StreamedOutgoingFrame`](#streamedoutgoingframe), it will be delayed until after the entire stream is sent.
+[`StreamedOutgoingMessage`](#streamedoutgoingmessage), it will be delayed until after the entire stream is sent.
 
 ### createMessageStream(type)
 - `type` - A value from the `WS13.FrameType.Data` enum representing what kind of data is to be sent
 
-Creates and returns a new [`StreamedOutgoingFrame`](#streamedoutgoingframe) object. See the [`StreamedOutgoingFrame` documentation](#streamedoutgoingframe)
+Creates and returns a new [`StreamedOutgoingMessage`](#streamedoutgoingmessage) object. See the [`StreamedOutgoingMessage` documentation](#streamedoutgoingmessage)
 for more information.
 
 # Events
@@ -310,42 +310,42 @@ If `type` is `Binary`, then `data` is a `Buffer`.
 
 ### streamedMessage
 - `type` - A value from the `WS13.FrameType.Data` enum descrbing what type of data we're receiving
-- `stream` - A [`StreamedIncomingFrame`](#streamedincomingframe) object
+- `stream` - A [`StreamedIncomingMessage`](#streamedincomingmessage) object
 
-Emitted when we receive the first part of a fragmented frame. See the [`StreamedIncomingFrame`](#streamedincomingframe)
+Emitted when we receive the first part of a fragmented frame. See the [`StreamedIncomingMessage`](#streamedincomingmessage)
 section for more information about this. If this event isn't handled, then fragmented incoming frames will be buffered
 internally, and [`message`](#message) will be emitted when the entire message is received, as normal.
 
-# StreamedOutgoingFrame
+# StreamedOutgoingMessage
 
 Messages are sent over WebSockets in *frames*. Usually, a frame contains one complete message. However, the WebSocket
 protocol also allows messages to be split up across multiple frames. This is useful when the entire data isn't available
 at the time of sending, and you'd like to stream it to the other side. In this case, call
-[`createMessageStream`](#createmessagestreamtype), which returns a `StreamedOutgoingFrame` object.
+[`createMessageStream`](#createmessagestreamtype), which returns a `StreamedOutgoingMessage` object.
 
-`StreamedOutgoingFrame` implements the [`Writable`](https://nodejs.org/api/stream.html#stream_class_stream_writable) interface.
+`StreamedOutgoingMessage` implements the [`Writable`](https://nodejs.org/api/stream.html#stream_class_stream_writable) interface.
 To send a chunk of data to the server, just call `frame.write(chunk)`. When you're done, call `frame.end()`.
 
 Because this implements the `Writable` interface, you can `pipe()` a `ReadableStream` into it. One use-case would be to
 pipe a download or a file on the disk into a WebSocket.
 
 One frame can contain only one type of data. This data type is set in the `createMessageStream` method, and is fixed
-for the lifetime of the `StreamedOutgoingFrame`. Therefore, if your data type is `Text`, you must only call `write()` with
+for the lifetime of the `StreamedOutgoingMessage`. Therefore, if your data type is `Text`, you must only call `write()` with
 UTF-8 strings. If it's `Binary`, you must only call `write()` with `Buffer` objects. If you call `write()` with the
-wrong data type, the `StreamedOutgoingFrame` will emit an `error`.
+wrong data type, the `StreamedOutgoingMessage` will emit an `error`.
 
-You *can* call `send()` or create new `StreamedOutgoingFrame`s while you have one ongoing, but they will be queued and cannot
-be sent to the server until the currently-active `StreamedOutgoingFrame` is ended. Be sure to call `end()` when you're done
+You *can* call `send()` or create new `StreamedOutgoingMessage`s while you have one ongoing, but they will be queued and cannot
+be sent to the server until the currently-active `StreamedOutgoingMessage` is ended. Be sure to call `end()` when you're done
 writing data to it.
 
-# StreamedIncomingFrame
+# StreamedIncomingMessage
 
-Similar to [`StreamedOutgoingFrame`](#streamedoutgoingframe), this object is a
-[`Readable`](https://nodejs.org/api/stream.html#stream_class_stream_readable) stream. Usage of `StreamedIncomingFrame`
+Similar to [`StreamedOutgoingMessage`](#streamedoutgoingmessage), this object is a
+[`Readable`](https://nodejs.org/api/stream.html#stream_class_stream_readable) stream. Usage of `StreamedIncomingMessage`
 allows you to receive chunks of data in real-time, instead of waiting for all chunks to be received.
 
 The data type for this message is made available through the [`streamedMessage`](#streamedmessage) event, or also
-through the `StreamedIncomingFrame#frameHeader.opcode` property. For example, if you have a `StreamedIncomingFrame`
+through the `StreamedIncomingMessage#frameHeader.opcode` property. For example, if you have a `StreamedIncomingMessage`
 object `frame`, you can obtain its data type using `frame.frameHeader.opcode`.
 
 The `data` event is emitted when a chunk of data is received. If the data type is `Text`, the single argument is a UTF-8
