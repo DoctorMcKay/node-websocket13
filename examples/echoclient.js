@@ -8,6 +8,8 @@ var socket = new WS13.WebSocket('ws://echo.websocket.org', {
 	"protocols": ["foo", "bar"] // supported subprotocols
 });
 
+var g_Interval = null;
+
 socket.on('connected', (info) => {
 	console.log("Connected with status code " + info.responseCode + " and protocol " + socket.protocol);
 
@@ -29,6 +31,11 @@ socket.on('connected', (info) => {
 
 	console.log("SEND: This message will be sent (and echoed) after the stream is finished.");
 	socket.send("This message will be sent (and echoed) after the stream is finished.");
+
+	g_Interval = setInterval(() => {
+		// Repeatedly send the current time
+		socket.send(new Date().toString());
+	}, 5000);
 });
 
 socket.on('message', (type, data) => {
@@ -48,4 +55,14 @@ socket.on('streamedMessage', (type, stream) => {
 	stream.on('end', () => {
 		console.log("Streamed message complete.");
 	})
+});
+
+socket.on('disconnected', (code, reason, initiatedByUs) => {
+	console.log("Disconnected with code " + code + " and reason '" + reason + "'");
+	clearInterval(g_Interval);
+});
+
+socket.on('error', (err) => {
+	console.log("Disconnected due to error: " + err.message);
+	clearInterval(g_Interval);
 });
