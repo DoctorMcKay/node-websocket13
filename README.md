@@ -6,8 +6,8 @@
 [![paypal](https://img.shields.io/badge/paypal-donate-yellow.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=N36YVAT42CZ4G&item_name=node%2dwebsocket13&currency_code=USD)
 
 This is a pure-JavaScript implementation of [WebSockets version 13](https://tools.ietf.org/html/rfc6455).
-It has only one lightweight dependency. Presently it can only establish connections to WebSocket servers (as a client),
-but server support is [planned](#planned-features).
+It has only one lightweight dependency. It can establish connections to WebSocket servers (as a client), and also accept
+connections from clients.
 
 **Requires node.js v4.0.0 or later.**
 
