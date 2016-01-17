@@ -7,7 +7,7 @@
 
 This is a pure-JavaScript implementation of [WebSockets version 13](https://tools.ietf.org/html/rfc6455).
 It has only one lightweight dependency. It can establish connections to WebSocket servers (as a client), and also accept
-connections from clients.
+connections from clients (as a server).
 
 **Requires node.js v4.0.0 or later.**
 
