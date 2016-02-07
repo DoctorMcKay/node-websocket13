@@ -5,7 +5,7 @@
 var WS13 = require('../lib/index.js'); // use require('websocket13') when installed from npm
 
 var webserver = require('http').createServer(function(req, res) {
-	res.statusCode = 403;
+	res.writeHead(403, {"Content-Type": "text/html"});
 	res.end("<html><body><h1>Forbidden</h1>This server only accepts WebSocket connections.</body></html>");
 });
 
