@@ -73,4 +73,8 @@ server.on('connection', (socket) => {
 	socket.on('debug', (msg) => {
 		//console.log(msg);
 	});
+
+	socket.on('latency', (time) => {
+		console.log("Client from " + socket.handshakeData.remoteAddress + " has latency: " + time + " ms");
+	});
 });
