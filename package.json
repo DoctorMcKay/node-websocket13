@@ -25,7 +25,9 @@
 	},
 	"homepage": "https://github.com/DoctorMcKay/node-websocket13",
 	"dependencies": {
-		"bytebuffer": "^5.0.0"
+		"bytebuffer": "^5.0.0",
+		"websocket-extensions": "^0.1.1",
+		"permessage-deflate": "^0.1.5"
 	},
 	"engines": {
 		"node": ">=4.0.0"
