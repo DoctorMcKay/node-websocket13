@@ -6,7 +6,7 @@
 [![paypal](https://img.shields.io/badge/paypal-donate-yellow.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=N36YVAT42CZ4G&item_name=node%2dwebsocket13&currency_code=USD)
 
 This is a pure-JavaScript implementation of [WebSockets version 13](https://tools.ietf.org/html/rfc6455).
-It has only one lightweight dependency. It can establish connections to WebSocket servers (as a client), and also accept
+It has no large or native dependencies. It can establish connections to WebSocket servers (as a client), and also accept
 connections from clients (as a server).
 
 **Requires node.js v4.0.0 or later.**
@@ -14,7 +14,3 @@ connections from clients (as a server).
 # Documentation
 
 Please see the [GitHub wiki](https://github.com/DoctorMcKay/node-websocket13/wiki) for documentation.
-
-# Planned Features
-
-- [Per-message compression](https://tools.ietf.org/html/draft-ietf-hybi-permessage-compression-28)
