@@ -25,10 +25,10 @@
 	},
 	"homepage": "https://github.com/DoctorMcKay/node-websocket13",
 	"dependencies": {
-		"@doctormckay/proxy-agent": "^1.0.0",
+		"@doctormckay/stdlib": "^1.1.0",
 		"bytebuffer": "^5.0.1",
-		"permessage-deflate": "^0.1.5",
-		"websocket-extensions": "^0.1.1"
+		"permessage-deflate": "^0.1.6",
+		"websocket-extensions": "^0.1.2"
 	},
 	"engines": {
 		"node": ">=4.0.0"
