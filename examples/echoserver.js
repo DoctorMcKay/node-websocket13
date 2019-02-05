@@ -2,16 +2,17 @@
  * Run this example and either enter ws://127.0.0.1:8080 at http://www.websocket.org/echo.html or point echoclient.js at it.
  */
 
-var WS13 = require('../lib/index.js'); // use require('websocket13') when installed from npm
+const HTTP = require('http');
+const WS13 = require('../lib/index.js'); // use require('websocket13') when installed from npm
 
-var webserver = require('http').createServer(function(req, res) {
+let webserver = HTTP.createServer(function(req, res) {
 	res.writeHead(403, {"Content-Type": "text/html"});
 	res.end("<html><body><h1>Forbidden</h1>This server only accepts WebSocket connections.</body></html>");
 });
 
 webserver.listen(8080);
 
-var server = new WS13.WebSocketServer({
+let server = new WS13.WebSocketServer({
 	"protocols": ["foo", "bar"], // we can use these subprotocols
 	"pingInterval": 15000 // we will sent pings to child sockets every 15 seconds
 });
@@ -37,7 +38,7 @@ server.on('handshake', (handshakeData, reject, accept) => {
 	}
 
 	// We'll accept this request. Add a custom header for our application. Also override the ping timeout length.
-	var websocket = accept({
+	let websocket = accept({
 		"headers": {"X-App-Header": "foobar"},
 		"options": {"pingTimeout": 15000}
 	});
@@ -62,7 +63,7 @@ server.on('connection', (socket) => {
 
 	socket.on('streamedMessage', (type, stream) => {
 		// Create a new stream and pipe our input into it
-		var out = socket.createMessageStream(type);
+		let out = socket.createMessageStream(type);
 		stream.pipe(out);
 	});
 

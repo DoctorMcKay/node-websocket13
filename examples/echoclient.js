@@ -2,13 +2,13 @@
  * Run this example and point it at echo.websocket.org or an instance of the echoserver.js example.
  */
 
-var WS13 = require('../lib/index.js'); // use require('websocket13') when installed from npm
+const WS13 = require('../lib/index.js'); // use require('websocket13') when installed from npm
 
-var socket = new WS13.WebSocket('ws://echo.websocket.org', {
+let socket = new WS13.WebSocket('ws://echo.websocket.org', {
 	"protocols": ["foo", "bar"] // supported subprotocols
 });
 
-var g_Interval = null;
+let g_Interval = null;
 
 socket.on('connected', (info) => {
 	console.log("Connected with status code " + info.responseCode + " and protocol " + socket.protocol);
@@ -16,9 +16,9 @@ socket.on('connected', (info) => {
 	console.log("SEND: Test message single-frame.");
 	socket.send("Test message single-frame.");
 
-	var i = 1;
-	var stream = socket.createMessageStream(WS13.FrameType.Data.Text);
-	var interval = setInterval(() => {
+	let i = 1;
+	let stream = socket.createMessageStream(WS13.FrameType.Data.Text);
+	let interval = setInterval(() => {
 		stream.write("Multi-frame message chunk #" + i + "\n");
 
 		if (i >= 20) {
