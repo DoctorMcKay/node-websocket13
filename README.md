@@ -9,7 +9,7 @@ This is a pure-JavaScript implementation of [WebSocket version 13](https://tools
 It has no large or native dependencies. It can establish connections to WebSocket servers (as a client), and also accept
 connections from clients (as a server).
 
-**Requires node.js v6.0.0 or later.**
+**Requires Node.js v6.0.0 or later.**
 
 # Documentation
 
