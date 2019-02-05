@@ -1,9 +1,9 @@
 {
 	"name": "websocket13",
-	"version": "1.7.0",
+	"version": "2.0.0-dev",
 	"private": true,
 	"description": "Simple WebSocket protocol 13 client with no native or heavy dependencies",
-	"author": "Alexander Corn <mckay@doctormckay.com>",
+	"author": "Alex Corn <mckay@doctormckay.com>",
 	"main": "./lib/index.js",
 	"repository": {
 		"type": "git",
