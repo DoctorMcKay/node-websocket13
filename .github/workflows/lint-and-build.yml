@@ -10,12 +10,12 @@ jobs:
         if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != 'DoctorMcKay/node-websocket13'
 
         steps:
-            - uses: actions/checkout@v1
+            - uses: actions/checkout@v3
               with:
                   fetch-depth: 1
 
             - name: Use Node.js 12.x
-              uses: actions/setup-node@v1
+              uses: actions/setup-node@v3
               with:
                   node-version: 12.x
 
@@ -39,12 +39,12 @@ jobs:
         if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != 'DoctorMcKay/node-websocket13'
 
         steps:
-            - uses: actions/checkout@v1
+            - uses: actions/checkout@v3
               with:
                   fetch-depth: 1
 
             - name: Use Node.js 12.x
-              uses: actions/setup-node@v1
+              uses: actions/setup-node@v3
               with:
                   node-version: 12.x
 
