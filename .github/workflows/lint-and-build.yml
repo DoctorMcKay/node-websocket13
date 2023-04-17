@@ -94,7 +94,9 @@ jobs:
             -   name: Install package
                 run: |
                     cd ~/ws13-test
-                    npm install websocket13-*.tgz
+                    ls
+                    mv websocket13-*.tgz websocket13.tgz
+                    npm install websocket13.tgz
 
             -   name: Run test
                 run: node test/test-lib.js
