@@ -1,6 +1,6 @@
 {
 	"name": "websocket13",
-	"version": "2.3.1",
+	"version": "2.4.0-beta.1",
 	"description": "Simple WebSocket protocol 13 client with no native or heavy dependencies",
 	"author": "Alex Corn <mckay@doctormckay.com>",
 	"main": "dist/index.js",
