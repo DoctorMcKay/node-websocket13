@@ -97,5 +97,5 @@ jobs:
                     ls
                     mv websocket13-*.tgz websocket13.tgz
                     npm install websocket13.tgz
-                    cd test
+                    cp ~/work/node-websocket13/node-websocket13/test/test-lib.js .
                     node test-lib.js
