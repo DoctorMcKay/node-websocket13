@@ -1,4 +1,5 @@
-test/
+dist/
+dev/
 node_modules/
 test.js
 

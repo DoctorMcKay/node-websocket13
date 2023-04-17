@@ -1,0 +1,106 @@
+name: Lint and Build
+
+on: [ push, pull_request ]
+
+jobs:
+    lint:
+        runs-on: ubuntu-latest
+
+        # Run for external PRs, but not on our own internal PRs as they'll be run by the push to the branch.
+        if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != 'DoctorMcKay/node-websocket13'
+
+        steps:
+            -   uses: actions/checkout@v3
+                with:
+                    fetch-depth: 1
+
+            -   name: Use Node.js 12.x
+                uses: actions/setup-node@v3
+                with:
+                    node-version: 12.x
+
+            -   name: Cache dependencies
+                uses: actions/cache@v3
+                with:
+                    path: node_modules
+                    key: ${{ runner.os }}-node_modules
+
+            -   name: npm install
+                working-directory: .
+                run: npm install --ignore-scripts
+
+            -   name: Run ESLint
+                run: npm run lint
+
+    build:
+        runs-on: ubuntu-latest
+
+        # Run for external PRs, but not on our own internal PRs as they'll be run by the push to the branch.
+        if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != 'DoctorMcKay/node-websocket13'
+
+        steps:
+            -   uses: actions/checkout@v3
+                with:
+                    fetch-depth: 1
+
+            -   name: Use Node.js 12.x
+                uses: actions/setup-node@v3
+                with:
+                    node-version: 12.x
+
+            -   name: Cache dependencies
+                uses: actions/cache@v3
+                with:
+                    path: node_modules
+                    key: ${{ runner.os }}-node_modules
+
+            -   name: npm install
+                working-directory: .
+                run: npm install --ignore-scripts
+
+            -   name: Run build
+                run: npm pack
+
+            -   name: Upload artifact
+                uses: actions/upload-artifact@v3
+                with:
+                    name: package
+                    path: websocket13-*.tgz
+
+    test:
+        needs: build
+        runs-on: ubuntu-latest
+
+        strategy:
+            matrix:
+                node-version: [ 6.x, 8.x, 10.x, 12.x, 14.x, 16.x, 18.x ]
+
+        steps:
+            -   uses: actions/checkout@v3
+                with:
+                    fetch-depth: 1
+
+            -   name: Use Node.js ${{ matrix.node-version }}
+                uses: actions/setup-node@v3
+                with:
+                    node-version: ${{ matrix.node-version }}
+
+            -   name: Download artifact
+                uses: actions/download-artifact@v3
+                with:
+                    name: package
+                    path: ~/ws13-test
+
+            -   name: Install package
+                run: |
+                    cd ~/ws13-test
+                    mv websocket13-*.tgz websocket13.tgz
+                    npm install websocket13.tgz
+                    cp ~/work/node-websocket13/node-websocket13/test/test-lib.js .
+                    ls
+                    npm ls
+
+            -   name: Run test
+                run: |
+                    cd ~/ws13-test
+                    node test-lib.js
