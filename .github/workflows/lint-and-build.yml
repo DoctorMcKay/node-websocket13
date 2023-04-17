@@ -98,6 +98,7 @@ jobs:
                     npm install websocket13.tgz
                     cp ~/work/node-websocket13/node-websocket13/test/test-lib.js .
                     ls
+                    npm ls
 
             -   name: Run test
                 run: |
