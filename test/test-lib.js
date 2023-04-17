@@ -1,3 +1,5 @@
+/* eslint-disable */
+
 // This is a very simple test, mostly just to make sure that things work under various Node.js versions.
 
 const {createServer} = require('http');
