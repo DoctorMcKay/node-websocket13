@@ -106,9 +106,9 @@ jobs:
                     node test-lib.js
 
     publish:
-        needs: test
+        needs: [lint, test]
         runs-on: ubuntu-latest
-        if: github.event.ref == 'refs/heads/master' && contains(github.event.head_commit.message, '#npm-publish')
+        if: success() && github.event.ref == 'refs/heads/master' && contains(github.event.head_commit.message, '#npm-publish')
 
         steps:
             -   uses: actions/checkout@v3
