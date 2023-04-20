@@ -8,9 +8,7 @@ jobs:
 
         # Run for external PRs, but not on our own internal PRs as they'll be run by the push to the branch.
         # Don't run for tag pushes
-        if: |
-            (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != 'DoctorMcKay/node-websocket13') ||
-            (github.event_name == 'push' && startsWith(github.event.ref, 'refs/heads''))
+        if: (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != 'DoctorMcKay/node-websocket13') || (github.event_name == 'push' && startsWith(github.event.ref, 'refs/heads''))
 
         steps:
             -   uses: actions/checkout@v3
@@ -40,9 +38,7 @@ jobs:
 
         # Run for external PRs, but not on our own internal PRs as they'll be run by the push to the branch.
         # Don't run for tag pushes
-        if: |
-            (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != 'DoctorMcKay/node-websocket13') ||
-            (github.event_name == 'push' && startsWith(github.event.ref, 'refs/heads''))
+        if: (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != 'DoctorMcKay/node-websocket13') || (github.event_name == 'push' && startsWith(github.event.ref, 'refs/heads''))
 
         steps:
             -   uses: actions/checkout@v3
