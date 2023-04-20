@@ -2,7 +2,6 @@ import {Agent as HttpAgent} from 'http';
 import {Agent as HttpsAgent} from 'https';
 import {Socket} from 'net';
 import {TLSSocket} from 'tls';
-import WebSocketExtensions from 'websocket-extensions';
 
 import {BaseWebSocketOptions} from './interfaces-internal';
 

@@ -35,6 +35,6 @@ export default class WebSocketServerConnection extends WebSocketBase {
 			this._dataBuffer = head; // don't call _handleData just yet, as there are no event listeners bound
 		}
 
-		this.emit('connected'); // perform connect tasks
+		this._onConnected();
 	}
 }

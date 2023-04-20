@@ -1,15 +1,15 @@
 import {createHash} from 'crypto';
-import {EventEmitter} from 'events';
 import {Server as HttpServer, IncomingMessage} from 'http';
 import {Socket} from 'net';
 import PermessageDeflate from 'permessage-deflate';
+import {TypedEmitter} from 'tiny-typed-emitter';
 import {parse as parseUrl} from 'url';
 import WebSocketExtensions from 'websocket-extensions';
 
 import {HandshakeData, WebSocketServerOptions} from './interfaces-external';
 import WebSocketServerConnection from './WebSocketServerConnection';
 import HTTPStatusCodes from './enums/HTTPStatusCodes';
-import {BaseWebSocketOptions} from './interfaces-internal';
+import {BaseWebSocketOptions, WebSocketServerEvents} from './interfaces-internal';
 
 const HTTP_VERSION = 1.1;
 const WEBSOCKET_VERSION = 13;
@@ -17,7 +17,7 @@ const WEBSOCKET_VERSION = 13;
 // eslint-disable-next-line
 const PACKAGE_VERSION = require('../package.json').version;
 
-export default class WebSocketServer extends EventEmitter {
+export default class WebSocketServer extends TypedEmitter<WebSocketServerEvents> {
 	options: WebSocketServerOptions;
 	protocols: string[];
 
@@ -197,7 +197,7 @@ export default class WebSocketServer extends EventEmitter {
 
 
 
-function buildResponse(code: number, headers: {[name: string]: any}, body?: string|{[name: string]: string}) {
+function buildResponse(code: number, headers: {[name: string]: any}, body?: string|object) {
 	let response = `HTTP/${HTTP_VERSION} ${code} ${HTTPStatusCodes[code] || 'Unknown Response'}\r\n`;
 
 	headers = headers || {};

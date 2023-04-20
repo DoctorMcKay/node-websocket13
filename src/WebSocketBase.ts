@@ -1,21 +1,28 @@
 import ByteBuffer from 'bytebuffer';
 import {randomBytes} from 'crypto';
-import {EventEmitter} from 'events';
 import PermessageDeflate from 'permessage-deflate';
+import {TypedEmitter} from 'tiny-typed-emitter';
 import WebSocketExtensions from 'websocket-extensions';
 
 import StreamedIncomingMessage from './streams/StreamedIncomingMessage';
 import StreamedOutgoingMessage from './streams/StreamedOutgoingMessage';
 
 import State from './enums/State';
-import {WebSocketStats, BaseWebSocketOptions, WsFrame, WsExtensionFrame, WsExtensionMessage} from './interfaces-internal';
+import {
+	WebSocketStats,
+	BaseWebSocketOptions,
+	WsFrame,
+	WsExtensionFrame,
+	WsExtensionMessage,
+	WebSocketEvents
+} from './interfaces-internal';
 import {Socket} from 'net';
 import {TLSSocket} from 'tls';
 import StatusCode from './enums/StatusCode';
 import Timer = NodeJS.Timer;
 import FrameType from './enums/FrameType';
 
-export default class WebSocketBase extends EventEmitter {
+export default class WebSocketBase extends TypedEmitter<WebSocketEvents> {
 	state: State;
 	protocol?: string;
 	stats: WebSocketStats;
@@ -57,11 +64,11 @@ export default class WebSocketBase extends EventEmitter {
 		this._dataBuffer = Buffer.alloc(0); // holds raw TCP data that we haven't processed yet
 		this._incomingStream = null; // StreamedIncomingMessage object for the current message
 		this._extensionProcessingOutgoingFrameId = 0;
+	}
 
-		this.on('connected', () => {
-			this._pingFailures = 0;
-			this._queuePing();
-		});
+	_onConnected() {
+		this._pingFailures = 0;
+		this._queuePing();
 	}
 
 	/**
@@ -185,6 +192,7 @@ export default class WebSocketBase extends EventEmitter {
 			let state = this.state;
 			this.state = State.Closed;
 			this.emit('disconnected', StatusCode.AbnormalTermination, 'Socket closed', state == State.Closing);
+			this.emit('disconnect', StatusCode.AbnormalTermination, 'Socket closed', state == State.Closing); // save people from typos
 			this._closeExtensions();
 			this._cleanupTimers();
 		});
@@ -484,6 +492,7 @@ export default class WebSocketBase extends EventEmitter {
 
 						if (state != State.ClosingError) {
 							this.emit('disconnected', code, reason, state == State.Closing);
+							this.emit('disconnect', code, reason, state == State.Closing); // save people from typos
 						}
 
 						break;

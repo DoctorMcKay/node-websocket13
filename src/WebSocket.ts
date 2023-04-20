@@ -7,7 +7,7 @@ import {parse as parseUrl} from 'url';
 import WebSocketExtensions from 'websocket-extensions';
 
 import WebSocketBase from './WebSocketBase';
-import {WebSocketClientConnectionOptionsInternal, WsFrame} from './interfaces-internal';
+import {WebSocketClientConnectionOptionsInternal, WebSocketConnectEventArgs, WsFrame} from './interfaces-internal';
 import {WebSocketClientOptions} from './interfaces-external';
 import State from './enums/State';
 
@@ -234,12 +234,15 @@ export default class WebSocket extends WebSocketBase {
 
 			// Everything is okay!
 			this.state = State.Connected;
-			this.emit('connected', {
+			let connectEventArgs:WebSocketConnectEventArgs = {
 				headers,
 				httpVersion: serverHttpVersion,
 				responseCode,
 				responseText
-			});
+			};
+			this.emit('connected', connectEventArgs);
+			this.emit('connect', connectEventArgs); // save people from typos
+			this._onConnected();
 
 			if (head && head.length > 0) {
 				this._handleData(head);

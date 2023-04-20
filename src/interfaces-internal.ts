@@ -1,5 +1,40 @@
-import WebSocketExtensions from 'websocket-extensions';
-import {WebSocketClientConnectionOptions} from './interfaces-external';
+import {HandshakeData, WebSocketClientConnectionOptions} from './interfaces-external';
+import StreamedIncomingMessage from './streams/StreamedIncomingMessage';
+import WebSocketServerConnection from './WebSocketServerConnection';
+
+export interface WebSocketEvents {
+	connected: (args: WebSocketConnectEventArgs) => void,
+	connect: (args: WebSocketConnectEventArgs) => void,
+	disconnected: (code: number, reason: string, initiatedByUs: boolean) => void,
+	disconnect: (code: number, reason: string, initiatedByUs: boolean) => void,
+	error: (err: Error) => void,
+	message: (type: number, data: string|Buffer) => void,
+	streamedMessage: (type: number, stream: StreamedIncomingMessage) => void,
+	latency: (pingTimeMilliseconds: number) => void,
+	timeout: () => void,
+	debug: (msg: string) => void
+}
+
+export interface WebSocketConnectEventArgs {
+	headers: {[name: string]: string},
+	httpVersion: string,
+	responseCode: number,
+	responseText: string
+}
+
+export interface WebSocketServerEvents {
+	handshake: (
+		handshakeData: HandshakeData,
+		reject: (statusCode?: number, body?: string|object, headers?: {[name: string]: string|number}) => void,
+		accept: (response?: {
+			headers?: {[name: string]: string|number},
+			protocol?: string,
+			options?: BaseWebSocketOptions,
+			permessageDeflate?: boolean
+		}) => WebSocketServerConnection
+	) => void,
+	connection: (socket: WebSocketServerConnection) => void
+}
 
 export interface BaseWebSocketOptions {
 	pingInterval?: number;

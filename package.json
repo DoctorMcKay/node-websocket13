@@ -31,6 +31,7 @@
 		"@doctormckay/stdlib": "^1.8.0",
 		"bytebuffer": "^5.0.1",
 		"permessage-deflate": "^0.1.7",
+		"tiny-typed-emitter": "^2.1.0",
 		"websocket-extensions": "^0.1.4"
 	},
 	"devDependencies": {
