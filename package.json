@@ -30,8 +30,8 @@
 	"dependencies": {
 		"@doctormckay/stdlib": "^1.8.0",
 		"bytebuffer": "^5.0.1",
-		"permessage-deflate": "^0.1.6",
-		"websocket-extensions": "^0.1.2"
+		"permessage-deflate": "^0.1.7",
+		"websocket-extensions": "^0.1.4"
 	},
 	"devDependencies": {
 		"@babel/cli": "^7.8.4",
