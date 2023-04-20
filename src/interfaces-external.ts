@@ -7,13 +7,12 @@ import WebSocketExtensions from 'websocket-extensions';
 import {BaseWebSocketOptions} from './interfaces-internal';
 
 export interface WebSocketServerOptions extends BaseWebSocketOptions {
-	permessageDeflate?: boolean;
 }
 
 export interface WebSocketClientOptions extends BaseWebSocketOptions {
-	headers: {[name: string]: string|number};
-	cookies: {[name: string]: string};
-	connection: WebSocketClientConnectionOptions;
+	headers?: {[name: string]: string|number};
+	cookies?: {[name: string]: string};
+	connection?: WebSocketClientConnectionOptions;
 	handshakeBody?: string;
 	httpProxy?: string;
 	proxyTimeout?: number;
@@ -40,9 +39,6 @@ export interface HandshakeData {
 	headers: {[name: string]: string},
 	httpVersion: string;
 	origin?: string;
-	extensions?: string;
-	extensionsHandler: WebSocketExtensions;
-	selectedExtensions: string;
 	protocols: string[];
 	selectedProtocol?: string;
 	auth?: string;

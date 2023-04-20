@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/websocket13.iml" filepath="$PROJECT_DIR$/.idea/websocket13.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../websocket13 Wiki/.idea/websocket13 Wiki.iml" filepath="$PROJECT_DIR$/../websocket13 Wiki/.idea/websocket13 Wiki.iml" />
     </modules>
   </component>
 </project>

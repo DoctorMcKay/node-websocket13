@@ -4,6 +4,7 @@ import {request as httpsRequest} from 'https';
 import {release as osRelease, arch as osArch} from 'os';
 import StdLib from '@doctormckay/stdlib';
 import {parse as parseUrl} from 'url';
+import WebSocketExtensions from 'websocket-extensions';
 
 import WebSocketBase from './WebSocketBase';
 import {WebSocketClientConnectionOptionsInternal, WsFrame} from './interfaces-internal';
@@ -26,12 +27,12 @@ export default class WebSocket extends WebSocketBase {
 	_connectOptions: WebSocketClientConnectionOptionsInternal;
 	_nonce: string;
 
-	constructor(uri, options) {
+	constructor(url: string, options?: WebSocketClientOptions) {
 		super();
 
-		uri = parseUrl(uri);
+		let parsedUri = parseUrl(url);
 
-		switch (uri.protocol.toLowerCase()) {
+		switch (parsedUri.protocol.toLowerCase()) {
 			case 'ws:':
 				this.secure = false;
 				break;
@@ -41,24 +42,26 @@ export default class WebSocket extends WebSocketBase {
 				break;
 
 			default:
-				throw new Error(`Unknown protocol scheme ${uri.protocol}`);
+				throw new Error(`Unknown protocol scheme ${parsedUri.protocol}`);
 		}
 
 		options = options || {};
 		Object.assign(this.options, options);
 
-		this._connectOptions = options.connection || {};
-		for (let element in uri) {
-			if (uri[element] !== null) {
-				this._connectOptions[element] = uri[element];
+		let connectOptions:any = options.connection || {};
+		for (let element in parsedUri) {
+			if (parsedUri[element] !== null) {
+				connectOptions[element] = parsedUri[element];
 			}
 		}
 
-		this._connectOptions.protocol = this.secure ? 'https:' : 'http:';
+		connectOptions.protocol = this.secure ? 'https:' : 'http:';
 
-		this.hostname = uri.hostname;
-		this.port = this._connectOptions.port = parseInt(uri.port || (this.secure ? 443 : 80), 10);
-		this.path = uri.path || '/';
+		this.hostname = parsedUri.hostname;
+		this.port = connectOptions.port = parseInt((parsedUri.port || (this.secure ? 443 : 80)).toString(), 10);
+		this.path = parsedUri.path || '/';
+
+		this._connectOptions = connectOptions;
 
 		// clone the headers object so we don't unexpectedly modify the object that was passed in
 		this.headers = JSON.parse(JSON.stringify(this.options.headers || {}));
@@ -70,7 +73,7 @@ export default class WebSocket extends WebSocketBase {
 			}
 		}
 
-		this.headers.host = this.headers.host || uri.host;
+		this.headers.host = this.headers.host || parsedUri.host;
 		this.headers.upgrade = 'websocket';
 		this.headers.connection = 'Upgrade';
 		this.headers['sec-websocket-version'] = WEBSOCKET_VERSION;
@@ -80,11 +83,12 @@ export default class WebSocket extends WebSocketBase {
 				`node-websocket13/${PACKAGE_VERSION}`
 			].join(' ');
 
-		if (this.options.extensions) {
-			this.extensions = this.options.extensions;
+		// permessageDeflate defaults to true, so only if it's false should we disable it
+		if (this.options.permessageDeflate === false) {
+			this._extensions = new WebSocketExtensions();
 		}
 
-		let extOffer = this.extensions.generateOffer();
+		let extOffer = this._extensions.generateOffer();
 		if (extOffer) {
 			this.headers['sec-websocket-extensions'] = extOffer;
 		}
@@ -217,7 +221,7 @@ export default class WebSocket extends WebSocketBase {
 			}
 
 			try {
-				this.extensions.activate(headers['sec-websocket-extensions']);
+				this._extensions.activate(headers['sec-websocket-extensions']);
 			} catch (ex) {
 				err.message = ex.message;
 				this._closeError(err);
@@ -254,8 +258,8 @@ export default class WebSocket extends WebSocketBase {
 		req.end(this.options.handshakeBody);
 	}
 
-	_sendFrame(frame: WsFrame): void {
+	_sendFrame(frame: WsFrame, bypassQueue = false): void {
 		frame.maskKey = randomBytes(4).readUInt32BE(0);
-		super._sendFrame(frame);
+		super._sendFrame(frame, bypassQueue);
 	}
 }

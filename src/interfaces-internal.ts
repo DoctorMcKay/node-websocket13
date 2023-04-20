@@ -6,7 +6,7 @@ export interface BaseWebSocketOptions {
 	pingTimeout?: number;
 	pingFailures?: number;
 	protocols?: string[];
-	extensions?: WebSocketExtensions;
+	permessageDeflate?: boolean;
 }
 
 export interface WebSocketClientConnectionOptionsInternal extends WebSocketClientConnectionOptions {

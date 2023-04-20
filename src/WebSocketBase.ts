@@ -17,13 +17,13 @@ import FrameType from './enums/FrameType';
 
 export default class WebSocketBase extends EventEmitter {
 	state: State;
-	extensions: WebSocketExtensions;
 	protocol?: string;
 	stats: WebSocketStats;
 	options: BaseWebSocketOptions;
 	remoteAddress: string;
 
 	_socket: Socket|TLSSocket;
+	_extensions: WebSocketExtensions;
 	_data: object;
 	_outgoingFrames: any; // todo
 	_dataBuffer: Buffer;
@@ -41,8 +41,8 @@ export default class WebSocketBase extends EventEmitter {
 		super();
 
 		this.state = State.Closed;
-		this.extensions = new WebSocketExtensions();
-		this.extensions.add(PermessageDeflate);
+		this._extensions = new WebSocketExtensions();
+		this._extensions.add(PermessageDeflate);
 		this.protocol = null;
 		this.stats = {tx: {wire: 0, preExt: 0}, rx: {wire: 0, postExt: 0}};
 
@@ -69,7 +69,7 @@ export default class WebSocketBase extends EventEmitter {
 	 * @param {number} [code=StatusCode.NormalClosure] - A value from the StatusCode enum to send to the other side
 	 * @param {string} [reason] - An optional reason string to send to the other side
 	 */
-	disconnect(code, reason): void {
+	disconnect(code?: number, reason?: string): void {
 		if (this.state == State.Connecting && this._socket) {
 			this._socket.end();
 			// @ts-ignore
@@ -141,7 +141,7 @@ export default class WebSocketBase extends EventEmitter {
 		return val;
 	}
 
-	getPeerCertificate(detailed) {
+	getPeerCertificate(detailed?: boolean) {
 		if (!(this._socket instanceof TLSSocket)) {
 			return null;
 		}
@@ -170,6 +170,8 @@ export default class WebSocketBase extends EventEmitter {
 		});
 
 		this._socket.on('close', () => {
+			this._cleanupTimers();
+
 			if (this.state == State.ClosingError) {
 				this.state = State.Closed;
 				return;
@@ -408,7 +410,7 @@ export default class WebSocketBase extends EventEmitter {
 		}
 
 		// Check to make sure RSV bits are valid
-		if (this.extensions && !this.extensions.validFrameRsv(getExtensionFrame(frame))) {
+		if (this._extensions && !this._extensions.validFrameRsv(getExtensionFrame(frame))) {
 			this._terminateError(StatusCode.ProtocolError, 'Unexpected reserved bit set');
 			return;
 		}
@@ -431,7 +433,7 @@ export default class WebSocketBase extends EventEmitter {
 			}
 
 			// Run it through extensions
-			this.extensions.processIncomingMessage(getExtensionMessage(frame), (err, msg) => {
+			this._extensions.processIncomingMessage(getExtensionMessage(frame), (err, msg) => {
 				if (err) {
 					this._terminateError(StatusCode.ProtocolError, err.message || err);
 					return;
@@ -573,7 +575,7 @@ export default class WebSocketBase extends EventEmitter {
 	}
 
 	_dispatchDataFrame(frame: WsFrame) {
-		this.extensions.processIncomingMessage(getExtensionMessage(frame), (err, msg) => {
+		this._extensions.processIncomingMessage(getExtensionMessage(frame), (err, msg) => {
 			if (err) {
 				this._terminateError(StatusCode.ProtocolError, err.message || err);
 				return;
@@ -660,7 +662,7 @@ export default class WebSocketBase extends EventEmitter {
 				}
 			}
 
-			this.extensions.processOutgoingMessage(getExtensionMessage(frame), (err, msg) => {
+			this._extensions.processOutgoingMessage(getExtensionMessage(frame), (err, msg) => {
 				if (err) {
 					this._terminateError(StatusCode.ProtocolError, err.message || err);
 					return;
@@ -823,6 +825,7 @@ export default class WebSocketBase extends EventEmitter {
 	_cleanupTimers(): void {
 		clearTimeout(this._pingTimeout);
 		clearTimeout(this._pingTimer);
+		clearTimeout(this._userTimeout);
 	}
 
 	_closeExtensions(callback?: () => void): void {
@@ -830,7 +833,7 @@ export default class WebSocketBase extends EventEmitter {
 		callback = callback || function() { };
 
 		try {
-			this.extensions.close(callback);
+			this._extensions.close(callback);
 		} catch (ex) {
 			callback();
 		}

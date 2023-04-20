@@ -1,3 +1,5 @@
+import WebSocketExtensions from 'websocket-extensions';
+
 import WebSocketBase from './WebSocketBase';
 import {Socket} from 'net';
 import {TLSSocket} from 'tls';
@@ -8,7 +10,13 @@ import State from './enums/State';
 export default class WebSocketServerConnection extends WebSocketBase {
 	handshakeData: HandshakeData;
 
-	constructor(socket: Socket|TLSSocket, options: BaseWebSocketOptions, handshakeData: HandshakeData, head: Buffer) {
+	constructor(
+		socket: Socket|TLSSocket,
+		options: BaseWebSocketOptions,
+		handshakeData: HandshakeData,
+		head: Buffer,
+		extensions: WebSocketExtensions
+	) {
 		super();
 
 		options = options || {};
@@ -16,7 +24,7 @@ export default class WebSocketServerConnection extends WebSocketBase {
 
 		this.state = State.Connected;
 		this.handshakeData = handshakeData;
-		this.extensions = options.extensions;
+		this._extensions = extensions;
 		this.protocol = handshakeData.selectedProtocol || null;
 
 		this._socket = socket;

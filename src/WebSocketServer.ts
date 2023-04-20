@@ -9,6 +9,7 @@ import WebSocketExtensions from 'websocket-extensions';
 import {HandshakeData, WebSocketServerOptions} from './interfaces-external';
 import WebSocketServerConnection from './WebSocketServerConnection';
 import HTTPStatusCodes from './enums/HTTPStatusCodes';
+import {BaseWebSocketOptions} from './interfaces-internal';
 
 const HTTP_VERSION = 1.1;
 const WEBSOCKET_VERSION = 13;
@@ -20,7 +21,7 @@ export default class WebSocketServer extends EventEmitter {
 	options: WebSocketServerOptions;
 	protocols: string[];
 
-	constructor(options: WebSocketServerOptions) {
+	constructor(options?: WebSocketServerOptions) {
 		super();
 
 		this.options = {
@@ -105,9 +106,6 @@ export default class WebSocketServer extends EventEmitter {
 				headers: req.headers,
 				httpVersion: req.httpVersion,
 				origin: req.headers.origin || null,
-				extensions: req.headers['sec-websocket-extensions'],
-				extensionsHandler: extensions,
-				selectedExtensions: selectedExtensions,
 				protocols: protocols || [],
 				selectedProtocol: selectedProtocol || null,
 				auth: null,
@@ -142,11 +140,10 @@ export default class WebSocketServer extends EventEmitter {
 				response = response || {};
 				let headers = response.headers || {};
 
-				let options = {
+				let options:BaseWebSocketOptions = {
 					pingInterval: this.options.pingInterval,
 					pingTimeout: this.options.pingTimeout,
 					pingFailures: this.options.pingFailures,
-					extensions
 				};
 
 				headers.Upgrade = 'websocket';
@@ -160,8 +157,11 @@ export default class WebSocketServer extends EventEmitter {
 					handshakeData.selectedProtocol = response.protocol || null;
 				}
 
-				if (response.extensions) {
-					options.extensions = extensions = response.extensions;
+				if (typeof response.permessageDeflate != 'undefined') {
+					extensions = new WebSocketExtensions();
+					if (response.permessageDeflate) {
+						extensions.add(PermessageDeflate);
+					}
 					selectedExtensions = extensions.generateResponse(req.headers['sec-websocket-extensions']);
 				}
 
@@ -178,7 +178,7 @@ export default class WebSocketServer extends EventEmitter {
 				response.options = response.options || {};
 				Object.assign(options, response.options);
 
-				let websocket = new WebSocketServerConnection(socket, options, handshakeData, head);
+				let websocket = new WebSocketServerConnection(socket, options, handshakeData, head, extensions);
 				this.emit('connection', websocket);
 				return websocket;
 			});
