@@ -5,6 +5,7 @@ import {TLSSocket} from 'tls';
 
 import {BaseWebSocketOptions} from './interfaces-internal';
 
+// eslint-disable-next-line
 export interface WebSocketServerOptions extends BaseWebSocketOptions {
 }
 
