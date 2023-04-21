@@ -1,8 +1,8 @@
 {
 	"name": "websocket13",
-	"version": "3.0.0-beta.2",
+	"version": "3.0.0",
 	"publishConfig": {
-		"tag": "beta"
+		"tag": "latest"
 	},
 	"description": "Simple WebSocket protocol 13 client with no native or heavy dependencies",
 	"author": "Alex Corn <mckay@doctormckay.com>",
