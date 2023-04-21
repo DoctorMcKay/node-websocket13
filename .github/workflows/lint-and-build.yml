@@ -4,73 +4,26 @@ on: [ push, pull_request ]
 
 jobs:
     lint:
-        runs-on: ubuntu-latest
-
         # Run for external PRs, but not on our own internal PRs as they'll be run by the push to the branch.
         # Don't run for tag pushes
         if: (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != 'DoctorMcKay/node-websocket13') ||
             (github.event_name == 'push' && startsWith(github.event.ref, 'refs/heads'))
 
-        steps:
-            -   uses: actions/checkout@v3
-                with:
-                    fetch-depth: 1
-
-            -   name: Use Node.js 12.x
-                uses: actions/setup-node@v3
-                with:
-                    node-version: 12.x
-
-            -   name: Cache dependencies
-                uses: actions/cache@v3
-                with:
-                    path: node_modules
-                    key: ${{ runner.os }}-node_modules
-
-            -   name: npm install
-                working-directory: .
-                run: npm install --ignore-scripts
-
-            -   name: Run ESLint
-                run: npm run lint
+        uses: DoctorMcKay/github-workflows/.github/workflows/eslint.yml
+        with:
+            node-version: 12.x
 
     build:
-        runs-on: ubuntu-latest
-
         # Run for external PRs, but not on our own internal PRs as they'll be run by the push to the branch.
         # Don't run for tag pushes
         if: |
             (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != 'DoctorMcKay/node-websocket13') ||
             (github.event_name == 'push' && startsWith(github.event.ref, 'refs/heads'))
 
-        steps:
-            -   uses: actions/checkout@v3
-                with:
-                    fetch-depth: 1
-
-            -   name: Use Node.js 12.x
-                uses: actions/setup-node@v3
-                with:
-                    node-version: 12.x
-
-            -   name: Cache dependencies
-                uses: actions/cache@v3
-                with:
-                    path: node_modules
-                    key: ${{ runner.os }}-node_modules
-
-            -   name: npm install
-                working-directory: .
-                run: npm install --ignore-scripts
-
-            -   name: Run build
-                run: npm pack
-
-            -   name: Upload artifact
-                uses: actions/upload-artifact@v3
-                with:
-                    name: package
-                    path: websocket13-*.tgz
+        uses: DoctorMcKay/github-workflows/.github/workflows/npm-pack.yml
+        with:
+            node-version: 12.x
+            package-name: websocket13
 
     test:
         needs: build
@@ -112,24 +65,7 @@ jobs:
 
     publish:
         needs: [lint, test]
-        runs-on: ubuntu-latest
         if: success() && github.event.ref == 'refs/heads/master' && contains(github.event.head_commit.message, '#npm-publish')
-
-        steps:
-            -   uses: actions/checkout@v3
-                with:
-                    fetch-depth: 1
-
-            -   name: Use Node.js 18.x
-                uses: actions/setup-node@v3
-                with:
-                    node-version: 18.x
-
-            -   name: npm install
-                working-directory: .
-                run: npm install --ignore-scripts
-
-            -   name: npm publish
-                uses: JS-DevTools/npm-publish@v2.0.0
-                with:
-                    token: ${{ secrets.NPM_ACCESS_TOKEN }}
+        uses: DoctorMcKay/github-workflows/.github/workflows/npm-publish.yml
+        secrets:
+            npm-access-token: ${{ secrets.NPM_ACCESS_TOKEN }}
