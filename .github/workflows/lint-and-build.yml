@@ -9,7 +9,7 @@ jobs:
         if: (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != 'DoctorMcKay/node-websocket13') ||
             (github.event_name == 'push' && startsWith(github.event.ref, 'refs/heads'))
 
-        uses: DoctorMcKay/github-workflows/.github/workflows/eslint.yml
+        uses: DoctorMcKay/github-workflows/.github/workflows/eslint.yml@master
         with:
             node-version: 12.x
 
@@ -20,7 +20,7 @@ jobs:
             (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != 'DoctorMcKay/node-websocket13') ||
             (github.event_name == 'push' && startsWith(github.event.ref, 'refs/heads'))
 
-        uses: DoctorMcKay/github-workflows/.github/workflows/npm-pack.yml
+        uses: DoctorMcKay/github-workflows/.github/workflows/npm-pack.yml@master
         with:
             node-version: 12.x
             package-name: websocket13
@@ -66,6 +66,6 @@ jobs:
     publish:
         needs: [lint, test]
         if: success() && github.event.ref == 'refs/heads/master' && contains(github.event.head_commit.message, '#npm-publish')
-        uses: DoctorMcKay/github-workflows/.github/workflows/npm-publish.yml
+        uses: DoctorMcKay/github-workflows/.github/workflows/npm-publish.yml@master
         secrets:
             npm-access-token: ${{ secrets.NPM_ACCESS_TOKEN }}
