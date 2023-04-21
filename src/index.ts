@@ -29,3 +29,15 @@ export {
 	// TypeScript interfaces
 	HandshakeData
 };
+
+// Also provide a default export
+export default {
+	// Enums
+	State,
+	FrameType,
+	StatusCode,
+
+	// Classes that consumers directly instantiate
+	WebSocket,
+	WebSocketServer
+}
