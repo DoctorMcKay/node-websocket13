@@ -40,4 +40,4 @@ export default {
 	// Classes that consumers directly instantiate
 	WebSocket,
 	WebSocketServer
-}
+};
