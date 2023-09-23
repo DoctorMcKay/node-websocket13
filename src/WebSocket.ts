@@ -1,5 +1,5 @@
 import {randomBytes, createHash} from 'crypto';
-import {request as httpRequest} from 'http';
+import {Agent, request as httpRequest} from 'http';
 import {request as httpsRequest} from 'https';
 import {release as osRelease, arch as osArch} from 'os';
 import StdLib from '@doctormckay/stdlib';
@@ -130,7 +130,7 @@ export default class WebSocket extends WebSocketBase {
 			if (this._connectOptions.agent) {
 				console.error('[websocket13] Warning: "agent" connection option specified; httpProxy option ignored');
 			} else {
-				this._connectOptions.agent = StdLib.HTTP.getProxyAgent(this.secure, this.options.httpProxy, this.options.proxyTimeout);
+				this._connectOptions.agent = StdLib.HTTP.getProxyAgent(this.secure, this.options.httpProxy, this.options.proxyTimeout) as Agent;
 			}
 		}
 
