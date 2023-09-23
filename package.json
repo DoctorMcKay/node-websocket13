@@ -31,7 +31,7 @@
 	},
 	"homepage": "https://github.com/DoctorMcKay/node-websocket13",
 	"dependencies": {
-		"@doctormckay/stdlib": "^1.8.0",
+		"@doctormckay/stdlib": "^2.7.1",
 		"bytebuffer": "^5.0.1",
 		"permessage-deflate": "^0.1.7",
 		"tiny-typed-emitter": "^2.1.0",
