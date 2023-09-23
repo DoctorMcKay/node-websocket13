@@ -63,12 +63,12 @@ export default class WebSocketServer extends TypedEmitter<WebSocketServerEvents>
 				return;
 			}
 
-			if (!req.headers['sec-websocket-key'] || Buffer.from(req.headers['sec-websocket-key'], 'base64').length != 16) {
+			if (!req.headers['sec-websocket-key'] || Buffer.from(req.headers['sec-websocket-key'] as string, 'base64').length != 16) {
 				bail('Missing or invalid Sec-WebSocket-Key.');
 				return;
 			}
 
-			if (req.headers['sec-websocket-version'] != WEBSOCKET_VERSION) {
+			if ((req.headers['sec-websocket-version'] as string) != WEBSOCKET_VERSION.toString()) {
 				bail(`Sec-WebSocket-Version must be ${WEBSOCKET_VERSION}.`);
 				return;
 			}
@@ -81,7 +81,7 @@ export default class WebSocketServer extends TypedEmitter<WebSocketServerEvents>
 			let selectedProtocol = null;
 			let protocols = [];
 			if (req.headers['sec-websocket-protocol']) {
-				protocols = req.headers['sec-websocket-protocol'].split(',').map(protocol => protocol.trim());
+				protocols = (req.headers['sec-websocket-protocol'] as string).split(',').map(protocol => protocol.trim());
 				// Do any of these match?
 
 				for (let i = 0; i < protocols.length; i++) {
@@ -102,8 +102,8 @@ export default class WebSocketServer extends TypedEmitter<WebSocketServerEvents>
 
 			let handshakeData:HandshakeData = {
 				path: uri.pathname,
-				query: uri.query,
-				headers: req.headers,
+				query: uri.query as {[name: string]: string},
+				headers: req.headers as {[name: string]: string},
 				httpVersion: req.httpVersion,
 				origin: req.headers.origin || null,
 				protocols: protocols || [],

@@ -197,7 +197,7 @@ export default class WebSocketBase extends TypedEmitter<WebSocketEvents> {
 			this._cleanupTimers();
 		});
 
-		this._socket.on('error', (err) => {
+		this._socket.on('error', (err:any) => {
 			if (this.state == State.Closed || this.state == State.ClosingError) {
 				// Ignore errors that come after the socket is closed (e.g. ECONNRESET when we respond to Close frames)
 				return;

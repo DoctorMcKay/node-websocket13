@@ -1,5 +1,5 @@
 import {randomBytes, createHash} from 'crypto';
-import {Agent, request as httpRequest} from 'http';
+import {Agent, request as httpRequest, RequestOptions} from 'http';
 import {request as httpsRequest} from 'https';
 import {release as osRelease, arch as osArch} from 'os';
 import StdLib from '@doctormckay/stdlib';
@@ -135,7 +135,7 @@ export default class WebSocket extends WebSocketBase {
 		}
 
 		let reqFunc = this.secure ? httpsRequest : httpRequest;
-		let req = reqFunc(this._connectOptions, (res) => {
+		let req = reqFunc(this._connectOptions as RequestOptions, (res) => {
 			let serverHttpVersion = res.httpVersion;
 			let responseCode = res.statusCode;
 			let responseText = res.statusMessage;
@@ -210,7 +210,7 @@ export default class WebSocket extends WebSocketBase {
 			}
 
 			if (headers['sec-websocket-protocol']) {
-				let protocol = headers['sec-websocket-protocol'].toLowerCase();
+				let protocol = (headers['sec-websocket-protocol'] as string).toLowerCase();
 				if (this.options.protocols.indexOf(protocol) == -1) {
 					err.message = `Server is using unsupported protocol ${protocol}`;
 					this._closeError(err);
@@ -235,7 +235,7 @@ export default class WebSocket extends WebSocketBase {
 			// Everything is okay!
 			this.state = State.Connected;
 			let connectEventArgs:WebSocketConnectEventArgs = {
-				headers,
+				headers: headers as {[name: string]: string},
 				httpVersion: serverHttpVersion,
 				responseCode,
 				responseText
@@ -249,7 +249,7 @@ export default class WebSocket extends WebSocketBase {
 			}
 		});
 
-		req.on('error', (err) => {
+		req.on('error', (err:any) => {
 			if (this.state != State.Connecting) {
 				return;
 			}
