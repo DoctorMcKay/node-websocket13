@@ -73,11 +73,6 @@ export default class WebSocketServer extends TypedEmitter<WebSocketServerEvents>
 				return;
 			}
 
-			if (!socket.remoteAddress) {
-				bail('Unable to determine IP address.');
-				return;
-			}
-
 			let selectedProtocol = null;
 			let protocols = [];
 			if (req.headers['sec-websocket-protocol']) {
@@ -110,7 +105,7 @@ export default class WebSocketServer extends TypedEmitter<WebSocketServerEvents>
 				selectedProtocol: selectedProtocol || null,
 				auth: null,
 				cookies: {},
-				remoteAddress: socket.remoteAddress.replace(/^::ffff:/, ''),
+				remoteAddress: socket.remoteAddress ? socket.remoteAddress.replace(/^::ffff:/, '') : undefined,
 				socket
 			};
 

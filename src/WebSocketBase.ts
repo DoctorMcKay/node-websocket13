@@ -27,7 +27,7 @@ export default class WebSocketBase extends TypedEmitter<WebSocketEvents> {
 	protocol?: string;
 	stats: WebSocketStats;
 	options: BaseWebSocketOptions;
-	remoteAddress: string;
+	remoteAddress: string|undefined;
 
 	_socket: Socket|TLSSocket;
 	_extensions: WebSocketExtensions;
@@ -168,7 +168,7 @@ export default class WebSocketBase extends TypedEmitter<WebSocketEvents> {
 	}
 
 	_prepSocketEvents() {
-		this.remoteAddress = this._socket.remoteAddress;
+		this.remoteAddress = this._socket.remoteAddress || undefined;
 
 		this._socket.on('data', (data) => {
 			if ([State.Connected, State.Closing, State.ClosingError].includes(this.state)) {

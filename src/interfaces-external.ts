@@ -43,6 +43,6 @@ export interface HandshakeData {
 	selectedProtocol?: string;
 	auth?: string;
 	cookies: {[name: string]: string};
-	remoteAddress: string;
+	remoteAddress: string|undefined;
 	socket: Socket|TLSSocket
 }
